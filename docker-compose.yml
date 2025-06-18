@@ -1,0 +1,19 @@
+
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
