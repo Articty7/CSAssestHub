@@ -7,6 +7,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/assets" element={<AssetList />} />
+        <Route path="assets/new" element={<AddAsset />} />
         {/* Add more routes as more pages here*/}
       </Routes>
     </Router>
@@ -14,4 +15,3 @@ function App() {
 }
 
 export default App;
-
