@@ -1,17 +1,13 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AssetList from './pages/AssetList';
+import CreateAssetForm from "./components/CreateAssetForm";
 
 function App() {
+
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/assets" element={<AssetList />} />
-        <Route path="assets/new" element={<AddAsset />} />
-        {/* Add more routes as more pages here*/}
-      </Routes>
-    </Router>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <CreateAssetForm />
+    </div>
   );
 }
 
-export default App;
+export default App
