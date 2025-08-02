@@ -4,7 +4,8 @@ import axios from 'axios';
 
 const CreateAssetForm = () => {
     const [name, setName] = useState('');
-    const [ description, setDescription] = useState('');
+    const [assetType, setAssetType] = useState('');
+    const [fileFormat, setFileFormat] = useState('');
     const [message, setMessage] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -14,12 +15,14 @@ const CreateAssetForm = () => {
         try{
             const res = await axios.post ('http://localhost:5000/api/assets', {
                 name,
-                description,
+                type: assetType,
+                format: fileFormat
             });
 
             setMessage(' Asset created successfully!');
             setName('');
-            setDescription('');
+            setAssetType('');
+            setFileFormat('');
             console.log(res.data);
         } catch (err) {
             console.error(err);
@@ -27,6 +30,7 @@ const CreateAssetForm = () => {
 
         }
         };
+
         return (
             <form
             onSubmit={handleSubmit}
@@ -52,13 +56,27 @@ const CreateAssetForm = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-mediium text-gray-700"> Description </label>
-                    <textarea
-                    onChange={(e) => setDescription(e.target.value)}
+                    <label className="block text-sm font-mediium text-gray-700"> Type </label>
+                    <
+                    type= "text
+                    value = {assetType}
+                    onChange={(e) => setAssetType(e.target.value)}
                     className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-                    rows={4}
+                    required
                     />
                 </div>
+
+                <div>
+                    <label className="block text-sm font-mediium text-gray-700"> File Format </label>
+                    <
+                    type= "text
+                    value = {FileFormat}
+                    onChange={(e) => setFileFormat(e.target.value)}
+                    className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                    required
+                    />
+                </div>
+
 
                 <button
                 type="submit"
