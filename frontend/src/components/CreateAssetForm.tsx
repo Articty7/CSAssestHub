@@ -7,6 +7,7 @@ const CreateAssetForm = () => {
     const [assetType, setAssetType] = useState('');
     const [fileFormat, setFileFormat] = useState('');
     const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState<'success' | 'error' | ''> ('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,6 +20,7 @@ const CreateAssetForm = () => {
                 format: fileFormat
             });
 
+            setMessageType('success');
             setMessage(' Asset created successfully!');
             setName('');
             setAssetType('');
@@ -26,20 +28,27 @@ const CreateAssetForm = () => {
             console.log(res.data);
         } catch (err) {
             console.error(err);
+            setMessageType('error');
             setMessage('Error creating asset.');
+
 
         }
         };
 
+
         return (
-            <form
+           <form
             onSubmit={handleSubmit}
             className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg space-y-4"
             >
+                <h1 className="text-3xl font-bold text-red-600">TAILWIND IS WORKING?</h1>
                 <h2 className="text-2xl font-bold mb-4">Create New Asset</h2>
 
                 {message &&(
-                    <div className="p-2 rounded text-sm text-white bg-green-500">
+                    <div className={`p-2 rounded text-sm text-white mb-4 ${
+                    messageType === 'success' ? 'bg-green-600' : messageType === 'error' ? 'bg-red-600' : ''}
+                    `}
+                    >
                         {message}
                     </div>
                 )}
@@ -56,9 +65,9 @@ const CreateAssetForm = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-mediium text-gray-700"> Type </label>
-                    <
-                    type= "text
+                    <label className="block text-sm font-medium text-gray-700"> Type </label>
+                    <input
+                    type= "text"
                     value = {assetType}
                     onChange={(e) => setAssetType(e.target.value)}
                     className="mt-1 p-2 w-full border border-gray-300 rounded-md"
@@ -67,10 +76,10 @@ const CreateAssetForm = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-mediium text-gray-700"> File Format </label>
-                    <
-                    type= "text
-                    value = {FileFormat}
+                    <label className="block text-sm font-medium text-gray-700"> File Format </label>
+                    <input
+                    type= "text"
+                    value = {fileFormat}
                     onChange={(e) => setFileFormat(e.target.value)}
                     className="mt-1 p-2 w-full border border-gray-300 rounded-md"
                     required
