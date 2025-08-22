@@ -18,3 +18,13 @@ class Config:
         _DB_URL = _DB_URL.replace('postgresql://', 'postgresql+psycopg2://', 1)
 
     SQLALCHEMY_DATABASE_URI = _DB_URL
+
+#Fixing a Time Out Error 500
+
+SQLALCHEMY_ENGINE_OPTIONS = {
+    "pool_pre_ping": True,     # validates connection before using it
+    "pool_recycle": 300,       # recycle connections every 5 minutes
+    "pool_size": 5,            # reasonable small pool
+    "max_overflow": 5,         # allow some burst
+    "pool_timeout": 10,        # wait up to 10s for a connection
+}
