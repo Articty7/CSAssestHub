@@ -39,9 +39,12 @@ db.init_app(app)
 Migrate(app, db)
 
 with app.app_context():
-    schema = os.environ.get("SCHEMA", "public")  # default to public if missing
-    db.session.execute(text(f"SET search_path TO {schema}, public"))
-    db.session.commit()
+    uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    if uri.startswith("postgres"):
+        schema = os.environ.get("SCHEMA", "public")  # default to public if missing
+        db.session.execute(text(f"SET search_path TO {schema}, public"))
+        db.session.commit()
+
 
 # --- Blueprints ---
 app.register_blueprint(user_routes, url_prefix='/api/users')

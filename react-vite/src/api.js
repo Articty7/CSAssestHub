@@ -29,3 +29,11 @@ export const deleteAsset  = (id)   => api.delete(`/assets/${id}`).then(r => r.da
 // upload helper -> GET pre-signed URL
 export const getPresign = (filename, contentType) =>
   api.get("/uploads/s3-url", { params: { filename, contentType }}).then(r => r.data);
+
+export const updateAsset = (id, data) => api.put(`/assets/${id}`, data).then(r => r.data);
+
+export const updateTag = (id, name) =>
+  api.put(`/tags/${id}`, { name }).then(r => r.data);
+
+export const deleteTag = (id) =>
+  api.delete(`/tags/${id}`).then(r => r.data);
