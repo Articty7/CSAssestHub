@@ -8,17 +8,27 @@ import Navigation from "../components/Navigation/Navigation";
 export default function Layout() {
   const dispatch = useDispatch();
   const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
-    dispatch(thunkAuthenticate()).then(() => setIsLoaded(true));
+    let mounted = true;
+    (async () => {
+      try {
+        await dispatch(thunkAuthenticate());
+      } catch (e) {
+        // swallow 401s or other errors so the UI still renders
+        // console.debug("auth check failed (ok in dev):", e);
+      } finally {
+        if (mounted) setIsLoaded(true);
+      }
+    })();
+    return () => { mounted = false; };
   }, [dispatch]);
 
   return (
-    <>
-      <ModalProvider>
-        <Navigation />
-        {isLoaded && <Outlet />}
-        <Modal />
-      </ModalProvider>
-    </>
+    <ModalProvider>
+      <Navigation />
+      {isLoaded ? <Outlet /> : <div style={{padding:16}}>Loading…</div>}
+      <Modal />
+    </ModalProvider>
   );
 }
