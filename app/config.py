@@ -7,21 +7,14 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True  # toggle if noisy
 
-    # Base URL from env with defaults
     _DB_URL = os.environ.get('DATABASE_URL', 'sqlite:///dev.db')
 
     # Heroku-style prefix fix
     if _DB_URL.startswith('postgres://'):
         _DB_URL = _DB_URL.replace('postgres://', 'postgresql://', 1)
 
-    # If using SQLAlchemy + psycopg (v3), enforce the driver in the URL
-    # so SQLAlchemy doesn't default to psycopg2.
+    # Force psycopg2 driver on Render
     if _DB_URL.startswith('postgresql://'):
-        try:
-            import psycopg  # noqa: F401
-            _DB_URL = _DB_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
-        except Exception:
-            # psycopg not installed; leave as-is (will use default driver)
-            pass
+        _DB_URL = _DB_URL.replace('postgresql://', 'postgresql+psycopg2://', 1)
 
     SQLALCHEMY_DATABASE_URI = _DB_URL
