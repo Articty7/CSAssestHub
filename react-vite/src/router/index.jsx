@@ -1,6 +1,6 @@
 //import React from "react";
 import { createBrowserRouter } from "react-router-dom";
-import Layout from "./layout.jsx";                 // ⬅ matches your file name
+import Layout from "./Layout.jsx";                 // ⬅ matches your file name
 import LoginFormPage from "../components/LoginFormPage";
 import SignupFormPage from "../components/SignupFormPage";
 import Assets from "../pages/Assets.jsx";          // ⬅ new
