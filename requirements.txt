@@ -25,5 +25,5 @@ wtforms==3.0.1; python_version >= '3.7'
 zipp==3.17.0; python_version >= '3.8'
 
 boto3==1.40.14
-#psycopg==3.2.9
-psycopg2-binary==2.9.9
+psycopg==3.2.9
+#psycopg2-binary==2.9.9
