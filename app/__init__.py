@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from flask_login import LoginManager
 from dotenv import load_dotenv
-from sqlalchemy import text
+from sqlalchemy import text, event  
 
 
 from .models import db, User
@@ -38,12 +38,28 @@ app.config.from_object(Config)
 db.init_app(app)
 Migrate(app, db)
 
+# Ensure the search_path is set for EVERY new DB connection from the pool
+schema = os.environ.get("SCHEMA", "public")
+
 with app.app_context():
-    uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
-    if uri.startswith("postgres"):
-        schema = os.environ.get("SCHEMA", "public")  # default to public if missing
-        db.session.execute(text(f"SET search_path TO {schema}, public"))
-        db.session.commit()
+    # Set it for the current connection (useful for migrations/startup)
+    db.session.execute(text(f"SET search_path TO {schema}, public"))
+    db.session.commit()
+
+    # And set it for every new connection acquired from the pool
+    @event.listens_for(db.engine, "connect")
+    def set_search_path(dbapi_connection, connection_record):
+        try:
+            # Works with psycopg (v3) and psycopg2
+            with dbapi_connection.cursor() as cur:
+                cur.execute(f"SET search_path TO {schema}, public")
+        except Exception:
+            # Fallback for drivers that allow direct execute on the connection
+            try:
+                dbapi_connection.execute(f"SET search_path TO {schema}, public")
+            except Exception:
+                pass
+
 
 
 # --- Blueprints ---
