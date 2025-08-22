@@ -33,3 +33,10 @@ def create_asset():
     db.session.add(a)
     db.session.commit()
     return a.to_dict(), 201
+
+@asset_routes.route("/<int:asset_id>", methods=["DELETE"])
+def delete_asset(asset_id):
+    a = Asset.query.get_or_404(asset_id)
+    db.session.delete(a)
+    db.session.commit()
+    return jsonify({"ok": True})

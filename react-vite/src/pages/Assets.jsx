@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { listAssets, createAsset, deleteAsset, listTags, createTag } from "../api";
+import {
+  listAssets, createAsset, deleteAsset,
+  listTags, createTag, getPresign
+} from "../api";
 
 export default function Assets() {
   const [assets, setAssets] = useState([]);
@@ -12,6 +15,8 @@ export default function Assets() {
   const [description, setDescription] = useState("");
   const [newTag, setNewTag] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState([]);
+  const [file, setFile] = useState(null);           // NEW
+  const [busy, setBusy] = useState(false);          // NEW
 
   const tagById = useMemo(
     () => Object.fromEntries(tags.map((t) => [t.id, t])),
@@ -23,7 +28,7 @@ export default function Assets() {
     setErr("");
     try {
       const [a, t] = await Promise.all([listAssets(), listTags()]);
-      setAssets(a.assets || a); // supports either {assets:[...]} or [...]
+      setAssets(a.assets || a);
       setTags(t.tags || t);
     } catch (e) {
       setErr(e?.response?.data?.error || e.message);
@@ -48,24 +53,55 @@ export default function Assets() {
     }
   }
 
+  // NEW: tiny helper for S3 PUT
+  async function putToS3(url, file, headers) {
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file?.type || "application/octet-stream",
+        ...(headers || {}),
+      },
+      body: file,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`S3 PUT failed ${res.status}: ${text}`);
+    }
+  }
+
   async function onCreateAsset(e) {
     e.preventDefault();
     setErr("");
+    setBusy(true);                                   // NEW
     try {
+      // If a file was chosen, presign + upload first
+      let publicUrl = null;                          // NEW
+      if (file) {
+        const pre = await getPresign(file.name, file.type || "application/octet-stream");
+        await putToS3(pre.uploadUrl, file, pre.headers || {});
+        publicUrl = pre.publicUrl;
+      }
+
       const payload = {
         name: name.trim(),
         description: description.trim(),
-        // If your backend expects tag NAMES, this is correct.
-        // If it expects IDs, change to: tags: selectedTagIds
+        url: publicUrl,                              // NEW: include S3 URL if uploaded
+        // backend expects tag NAMES (per your create route)
         tags: selectedTagIds.map((id) => tagById[id]?.name).filter(Boolean),
       };
-      await createAsset(payload);
+      const created = await createAsset(payload);
+      const row = created.assets ? created.assets[0] : created;
+      setAssets((cur) => [row, ...cur]);            // optimistic add
+
+      // reset form
       setName("");
       setDescription("");
       setSelectedTagIds([]);
-      await refresh();
+      setFile(null);                                // NEW
     } catch (e) {
       setErr(e?.response?.data?.error || e.message);
+    } finally {
+      setBusy(false);                                // NEW
     }
   }
 
@@ -80,33 +116,17 @@ export default function Assets() {
   }
 
   return (
-    <div
-      style={{
-        maxWidth: 900,
-        margin: "2rem auto",
-        padding: "0 1rem",
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
+    <div style={{ maxWidth: 900, margin: "2rem auto", padding: "0 1rem", fontFamily: "system-ui, sans-serif" }}>
       <h1>Asset Hub</h1>
 
       {err && (
-        <div
-          style={{
-            background: "#ffe5e5",
-            border: "1px solid #ff9b9b",
-            padding: 10,
-            marginBottom: 12,
-          }}
-        >
+        <div style={{ background: "#ffe5e5", border: "1px solid #ff9b9b", padding: 10, marginBottom: 12 }}>
           {err}
         </div>
       )}
 
       {/* Create Tag */}
-      <section
-        style={{ margin: "1.5rem 0", padding: "1rem", border: "1px solid #ddd", borderRadius: 8 }}
-      >
+      <section style={{ margin: "1.5rem 0", padding: "1rem", border: "1px solid #ddd", borderRadius: 8 }}>
         <h2 style={{ marginTop: 0 }}>Create Tag</h2>
         <form onSubmit={onCreateTag} style={{ display: "flex", gap: 8 }}>
           <input
@@ -119,10 +139,7 @@ export default function Assets() {
         </form>
         <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
           {tags.map((t) => (
-            <span
-              key={t.id}
-              style={{ padding: "4px 8px", border: "1px solid #ccc", borderRadius: 999 }}
-            >
+            <span key={t.id} style={{ padding: "4px 8px", border: "1px solid #ccc", borderRadius: 999 }}>
               {t.name}
             </span>
           ))}
@@ -130,9 +147,7 @@ export default function Assets() {
       </section>
 
       {/* Create Asset */}
-      <section
-        style={{ margin: "1.5rem 0", padding: "1rem", border: "1px solid #ddd", borderRadius: 8 }}
-      >
+      <section style={{ margin: "1.5rem 0", padding: "1rem", border: "1px solid #ddd", borderRadius: 8 }}>
         <h2 style={{ marginTop: 0 }}>Create Asset</h2>
         <form onSubmit={onCreateAsset} style={{ display: "grid", gap: 10 }}>
           <input
@@ -149,6 +164,17 @@ export default function Assets() {
             rows={3}
             style={{ padding: 8 }}
           />
+          {/* NEW: File input */}
+          <div>
+            <label style={{ display: "block", marginBottom: 6 }}>File (optional)</label>
+            <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            {file && (
+              <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+                {file.name} • {file.type || "application/octet-stream"} • {file.size} bytes
+              </div>
+            )}
+          </div>
+
           <div>
             <label style={{ display: "block", marginBottom: 6 }}>Tags</label>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -180,7 +206,7 @@ export default function Assets() {
               })}
             </div>
           </div>
-          <button type="submit">Create</button>
+          <button type="submit" disabled={busy}>{busy ? "Saving…" : "Create"}</button>
         </form>
       </section>
 
@@ -209,12 +235,8 @@ export default function Assets() {
                     <td style={td}>{(a.tags || []).map((t) => t.name || t).join(", ")}</td>
                     <td style={td}>
                       {a.url ? (
-                        <a href={a.url} target="_blank" rel="noreferrer">
-                          open
-                        </a>
-                      ) : (
-                        "-"
-                      )}
+                        <a href={a.url} target="_blank" rel="noreferrer">open</a>
+                      ) : ("-")}
                     </td>
                     <td style={{ ...td, textAlign: "right" }}>
                       <button onClick={() => onDeleteAsset(a.id)} style={{ color: "#b00" }}>
@@ -225,9 +247,7 @@ export default function Assets() {
                 ))}
                 {!assets.length && !loading && (
                   <tr>
-                    <td style={td} colSpan={5}>
-                      No assets yet.
-                    </td>
+                    <td style={td} colSpan={5}>No assets yet.</td>
                   </tr>
                 )}
               </tbody>

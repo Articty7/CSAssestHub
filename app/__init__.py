@@ -43,6 +43,7 @@ app.register_blueprint(asset_routes, url_prefix='/api/assets')
 app.register_blueprint(tag_routes, url_prefix='/api/tags')       
 app.register_blueprint(upload_routes, url_prefix="/api/uploads")
 
+
 # --- Security ---
 CORS(app)
 
