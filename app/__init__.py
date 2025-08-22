@@ -36,6 +36,11 @@ app.config.from_object(Config)
 db.init_app(app)
 Migrate(app, db)
 
+with app.app_context():
+    schema = os.environ.get("SCHEMA", "public")  # default to public if missing
+    db.session.execute(text(f"SET search_path TO {schema}, public"))
+    db.session.commit()
+
 # --- Blueprints ---
 app.register_blueprint(user_routes, url_prefix='/api/users')
 app.register_blueprint(auth_routes, url_prefix='/api/auth')
