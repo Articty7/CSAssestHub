@@ -9,18 +9,19 @@ class Config:
     _is_prod = (os.environ.get("FLASK_ENV") == "production") or bool(os.environ.get("RENDER"))
     SQLALCHEMY_ECHO = False if _is_prod else True
 
+    # Base DB URL (SQLite locally by default)
     _DB_URL = os.environ.get("DATABASE_URL", "sqlite:///dev.db")
 
-    # 1) Normalize old Heroku prefix
+    # Normalize old Heroku scheme
     if _DB_URL.startswith("postgres://"):
         _DB_URL = _DB_URL.replace("postgres://", "postgresql://", 1)
 
-    # 2) Force psycopg2 dialect
+    # Choose driver: psycopg2 (stable) for Postgres
     if _DB_URL.startswith("postgresql://"):
         _DB_URL = _DB_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-    # 3) Ensure SSL in production
-    if _is_prod and _DB_URL.startswith("postgresql+psycopg2://"):
+    # Add sslmode in production
+    if _DB_URL.startswith("postgresql+psycopg2://") and _is_prod:
         p = urlparse(_DB_URL)
         q = dict(parse_qsl(p.query))
         q.setdefault("sslmode", "require")
@@ -28,10 +29,18 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = _DB_URL
 
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_pre_ping": True,
-        "pool_recycle": 300,
-        "pool_size": 5,
-        "max_overflow": 5,
-        "pool_timeout": 10,
-    }
+    # Engine options: Postgres gets a pool; SQLite gets none (or simple defaults)
+    if SQLALCHEMY_DATABASE_URI.startswith("postgresql+psycopg2://"):
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "pool_pre_ping": True,
+            "pool_recycle": 300,
+            "pool_size": 5,
+            "max_overflow": 5,
+            "pool_timeout": 10,
+        }
+    else:
+        # SQLite: avoid pool kwargs that cause TypeError
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            # If you need multi-threaded access you could also add:
+            # "connect_args": {"check_same_thread": False}
+        }

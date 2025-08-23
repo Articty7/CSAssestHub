@@ -38,29 +38,30 @@ app.config.from_object(Config)
 db.init_app(app)
 Migrate(app, db)
 
-# Ensure the search_path is set for EVERY new DB connection from the pool
+# Ensure the search_path is set for EVERY new DB connection from the pool, but only on Postgres
+from sqlalchemy import text, event
+
 schema = os.environ.get("SCHEMA", "public")
 
 with app.app_context():
-    # Set it for the current connection (useful for migrations/startup)
-    db.session.execute(text(f"SET search_path TO {schema}, public"))
-    db.session.commit()
+    backend = db.engine.url.get_backend_name()  # 'postgresql' or 'sqlite'
+    if backend == "postgresql":
+        # Set it for the current connection (useful for migrations/startup)
+        db.session.execute(text(f"SET search_path TO {schema}, public"))
+        db.session.commit()
 
-    # And set it for every new connection acquired from the pool
-    @event.listens_for(db.engine, "connect")
-    def set_search_path(dbapi_connection, connection_record):
-        try:
-            # Works with psycopg (v3) and psycopg2
-            with dbapi_connection.cursor() as cur:
-                cur.execute(f"SET search_path TO {schema}, public")
-        except Exception:
-            # Fallback for drivers that allow direct execute on the connection
+        # And set it for every new connection acquired from the pool
+        @event.listens_for(db.engine, "connect")
+        def set_search_path(dbapi_connection, connection_record):
             try:
-                dbapi_connection.execute(f"SET search_path TO {schema}, public")
+                with dbapi_connection.cursor() as cur:
+                    cur.execute(f"SET search_path TO {schema}, public")
             except Exception:
-                pass
-
-
+                # Fallback for drivers that allow direct execute on the connection
+                try:
+                    dbapi_connection.execute(f"SET search_path TO {schema}, public")
+                except Exception:
+                    pass
 
 # --- Blueprints ---
 app.register_blueprint(user_routes, url_prefix='/api/users')
