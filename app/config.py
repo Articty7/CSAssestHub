@@ -44,18 +44,21 @@ class Config:
             # If you need multi-threaded access you could also add:
             # "connect_args": {"check_same_thread": False}
         }
-# app/config.py (near the bottom of the class or right after SQLALCHEMY_DATABASE_URI is set)
-if os.getenv("RENDER"):  # only log in Render
+        
+        
+# ---- DEBUG OUTPUT ----
+if os.getenv("RENDER"):
     try:
         from urllib.parse import urlparse, parse_qsl
-        _u = urlparse(SQLALCHEMY_DATABASE_URI)
-        _q = dict(parse_qsl(_u.query))
+        u = urlparse(Config.SQLALCHEMY_DATABASE_URI)
+        q = dict(parse_qsl(u.query))
         print(
-            "DB DEBUG -> scheme:", _u.scheme,
-            "host:", _u.hostname,
-            "port:", _u.port,
-            "db:", _u.path,
-            "sslmode:", _q.get("sslmode"),
+            "DB DEBUG (final) -> scheme:", u.scheme,
+            "host:", u.hostname,
+            "port:", u.port,
+            "db:", u.path,
+            "sslmode:", q.get("sslmode"),
         )
     except Exception as e:
-        print("DB DEBUG -> failed to parse DATABASE_URL:", e)
+        print("DB DEBUG (final) -> failed:", e)
+
