@@ -26,6 +26,26 @@ class Config:
         q = dict(parse_qsl(p.query))
         q.setdefault("sslmode", "require")
         _DB_URL = urlunparse(p._replace(query=urlencode(q)))
+        
+   #Fix for no port identity     
+            # Force default Postgres port if it’s missing (helps avoid odd TLS paths)
+    if _DB_URL.startswith("postgresql+psycopg2://"):
+        p = urlparse(_DB_URL)
+        if p.port is None and p.hostname:
+            netloc = p.netloc
+            # Preserve userinfo if present, just add :5432 to the host part
+            if '@' in netloc:
+                userinfo, hostport = netloc.rsplit('@', 1)
+                if ':' not in hostport:
+                    hostport = f"{hostport}:5432"
+                netloc = f"{userinfo}@{hostport}"
+            else:
+                if ':' not in netloc:
+                    netloc = f"{netloc}:5432"
+            _DB_URL = urlunparse(p._replace(netloc=netloc))
+
+
+
 
     SQLALCHEMY_DATABASE_URI = _DB_URL
 
