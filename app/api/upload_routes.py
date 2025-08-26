@@ -68,15 +68,12 @@ def presign_put():
     """
     GET /api/uploads/s3-url?filename=<name>&contentType=<mime>
 
-    Returns JSON with both new and legacy keys, e.g.:
+    Returns JSON with both new and legacy keys:
     {
-      "put_url": "...",        # new
-      "get_url": "...",        # new
-      "uploadUrl": "...",      # legacy alias
-      "getUrl": "...",         # legacy alias
-      "publicUrl": "...",      # non-signed path-style URL
-      "key": "uploads/2025/08/25/file.png",
-      "headers": {"Content-Type": "image/png"}
+      "put_url": "...", "get_url": "...",
+      "uploadUrl": "...", "getUrl": "...",
+      "publicUrl": "...", "key": "...",
+      "headers": {"Content-Type": "..."}
     }
     """
     try:
@@ -134,3 +131,29 @@ def presign_put():
             "key": key,
             "headers": {"Content-Type": content_type},
         }), 200
+
+    except Exception as e:
+        current_app.logger.exception("presign_put failed")
+        return jsonify({"error": f"presign failed: {e.__class__.__name__}: {e}"}), 500
+
+
+@upload_routes.get("/get-url")
+def presign_get():
+    """
+    GET /api/uploads/get-url?key=<s3_key>
+    Returns { "url": "<presigned_get_url>" }
+    """
+    key = request.args.get("key")
+    if not key:
+        return jsonify({"error": "key is required"}), 400
+    try:
+        s3 = _s3_client()
+        url = s3.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={"Bucket": _bucket_name(), "Key": key},
+            ExpiresIn=300,
+        )
+        return jsonify({"url": url}), 200
+    except Exception as e:
+        current_app.logger.exception("presign_get failed")
+        return jsonify({"error": f"presign failed: {e.__class__.__name__}: {e}"}), 500
