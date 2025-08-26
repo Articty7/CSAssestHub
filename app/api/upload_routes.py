@@ -134,5 +134,3 @@ def presign_put():
             "key": key,
             "headers": {"Content-Type": content_type},
         }), 200
-
-    ex
