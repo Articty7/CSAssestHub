@@ -4,19 +4,29 @@ import mimetypes
 import time
 from urllib.parse import quote
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 import boto3
 from botocore.config import Config as BotoConfig
 
 upload_routes = Blueprint("uploads", __name__)
 
-# ----- helpers ---------------------------------------------------------------
+# ---------- helpers -----------------------------------------------------------
 
-def _env(name, default=None, required=False):
-    val = os.environ.get(name, default)
-    if required and not val:
-        raise RuntimeError(f"Missing env var: {name}")
-    return val
+def _env(name, default=None, required=False, alt_names=None):
+    """
+    Read env var by primary name or any alt names. If required and not found,
+    raise a clear error.
+    """
+    alt_names = alt_names or []
+    for key in [name] + alt_names:
+        val = os.environ.get(key)
+        if val:
+            return val
+    if default is not None:
+        return default
+    if required:
+        raise RuntimeError(f"Missing env var: {name} (checked { [name]+alt_names })")
+    return None
 
 def _safe_key(filename: str) -> str:
     """
@@ -27,19 +37,44 @@ def _safe_key(filename: str) -> str:
     safe = quote(filename)  # URL-safe, retains dots and most ascii
     return f"{prefix}/{date_path}/{safe}" if prefix else f"{date_path}/{safe}"
 
-# ----- route ----------------------------------------------------------------
+def _s3_client():
+    # Support both common env names
+    region = _env("AWS_REGION", alt_names=["AWS_DEFAULT_REGION"], required=True)
+    return boto3.client(
+        "s3",
+        region_name=region,
+        config=BotoConfig(signature_version="s3v4", s3={"addressing_style": "virtual"}),
+    )
+
+def _bucket_name():
+    return _env("S3_BUCKET", alt_names=["S3_BUCKET_NAME"], required=True)
+
+def _public_base():
+    """
+    Optional override to form public-style URLs if you host behind CDN, etc.
+    """
+    return os.environ.get("S3_PUBLIC_BASE")
+
+def _region():
+    return _env("AWS_REGION", alt_names=["AWS_DEFAULT_REGION"], required=True)
+
+# ---------- routes ------------------------------------------------------------
 
 @upload_routes.get("/s3-url")
 def presign_put():
     """
     GET /api/uploads/s3-url?filename=<name>&contentType=<mime>
-    Returns JSON with presigned PUT URL, public URL, and headers.
+    Returns JSON:
+      {
+        "put_url": "...",
+        "get_url": "...",
+        "key": "uploads/2025/08/25/file.png",
+        "headers": {"Content-Type": "image/png"}
+      }
     """
     try:
-        bucket = _env("S3_BUCKET_NAME", required=True)
-        region = _env("AWS_DEFAULT_REGION", required=True)
-        public_base = os.environ.get("S3_PUBLIC_BASE")  # optional override
-
+        bucket = _bucket_name()
+        region = _region()
         filename = request.args.get("filename")
         if not filename:
             return jsonify({"error": "filename is required"}), 400
@@ -51,45 +86,53 @@ def presign_put():
             content_type = "application/octet-stream"
 
         key = _safe_key(filename)
+        s3 = _s3_client()
 
-        # Use regional endpoint + virtual-hosted style to avoid 307 redirects
-        s3 = boto3.client(
-            "s3",
-            region_name=region,
-            config=BotoConfig(
-                signature_version="s3v4",
-                s3={"addressing_style": "virtual"},  # https://<bucket>.s3.<region>...
-            ),
-            endpoint_url=f"https://s3.{region}.amazonaws.com",
-        )
+        params = {"Bucket": bucket, "Key": key, "ContentType": content_type}
 
-        params = {
-            "Bucket": bucket,
-            "Key": key,
-            "ContentType": content_type,
-        }
-
-        upload_url = s3.generate_presigned_url(
+        put_url = s3.generate_presigned_url(
             ClientMethod="put_object",
             Params=params,
-            ExpiresIn=900,  # 15 minutes
+            ExpiresIn=900,  # 15 min
             HttpMethod="PUT",
         )
 
-        # Public URL where the object will live
-        if public_base:
-            public_url = f"{public_base.rstrip('/')}/{key}"
-        else:
-            public_url = f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
+        # Presigned GET for preview/download (object can remain private)
+        get_url = s3.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=300,  # 5 min
+        )
 
         return jsonify({
-            "uploadUrl": upload_url,
-            "publicUrl": public_url,
+            "put_url": put_url,
+            "get_url": get_url,
             "key": key,
             "headers": {"Content-Type": content_type},
-        })
+        }), 200
 
-    except RuntimeError as e:
-        return jsonify({"error": str(e)}), 500
     except Exception as e:
+        current_app.logger.exception("presign_put failed")
+        return jsonify({"error": f"presign failed: {e.__class__.__name__}: {e}"}), 500
+
+
+@upload_routes.get("/get-url")
+def presign_get():
+    """
+    GET /api/uploads/get-url?key=<s3_key>
+    Returns { "url": "<presigned_get_url>" }
+    """
+    key = request.args.get("key")
+    if not key:
+        return jsonify({"error": "key is required"}), 400
+    try:
+        s3 = _s3_client()
+        url = s3.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={"Bucket": _bucket_name(), "Key": key},
+            ExpiresIn=300,
+        )
+        return jsonify({"url": url}), 200
+    except Exception as e:
+        current_app.logger.exception("presign_get failed")
         return jsonify({"error": f"presign failed: {e.__class__.__name__}: {e}"}), 500
