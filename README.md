@@ -1,131 +1,141 @@
-# Flask React Project
+# AssetHub – Unreal Asset Management Tool
 
-This is the starter for the Flask React project.
+## Overview
+AssetHub is a full-stack asset management platform designed for game and CG production pipelines.  
+It combines a React frontend, a Flask backend, a relational database, and Unreal Engine editor-side tooling to support asset exports, metadata tracking, and secure distribution of approved assets.
 
-## Getting started
+The project focuses on realistic tooling workflows rather than simple CRUD demos.
 
-1. Clone this repository (only this branch).
+---
 
-2. Install dependencies.
+## Tech Stack
 
-   ```bash
-   pipenv install -r requirements.txt
-   ```
+### Frontend
+- React (JavaScript)
+- Axios
+- CSS (plain CSS; Tailwind used in supporting projects)
 
-3. Create a __.env__ file based on the example with proper settings for your
-   development environment.
+### Backend
+- Python
+- Flask (REST API)
 
-4. Make sure the SQLite3 database connection URL is in the __.env__ file.
+### Database
+- SQLite (SQL)
 
-5. This starter organizes all tables inside the `flask_schema` schema, defined
-   by the `SCHEMA` environment variable.  Replace the value for
-   `SCHEMA` with a unique name, **making sure you use the snake_case
-   convention.**
+### Cloud & Infrastructure
+- AWS S3 (private bucket with presigned download URLs)
+- Docker (planned)
+- Render (planned deployment)
 
-6. Get into your pipenv, migrate your database, seed your database, and run your
-   Flask app:
+### Engine Integration
+- Unreal Engine **5.7.1**
+- Blueprint-based editor tooling
+- Optional Unreal Python scripting
 
-   ```bash
-   pipenv shell
-   ```
+---
 
-   ```bash
-   flask db upgrade
-   ```
+## Current Status
+- MVP completed: **September 2025**
+- Development resumed: **January 2026**
+- Current phase: **v2 iteration and polish**
 
-   ```bash
-   flask seed all
-   ```
+Primary focus:
+- Full CRUD completion
+- Secure asset storage and public demo access
+- Deployment and Unreal pipeline refinement
 
-   ```bash
-   flask run
-   ```
+---
 
-7. The React frontend has no styling applied. Copy the __.css__ files from your
-   Authenticate Me project into the corresponding locations in the
-   __react-vite__ folder to give your project a unique look.
+## Public Demo Mode (No Login Required)
+AssetHub includes a **public, read-only demo mode** intended for recruiters and interviewers.
 
-8. To run the React frontend in development, `cd` into the __react-vite__
-   directory and run `npm i` to install dependencies. Next, run `npm run build`
-   to create the `dist` folder. The starter has modified the `npm run build`
-   command to include the `--watch` flag. This flag will rebuild the __dist__
-   folder whenever you change your code, keeping the production version up to
-   date.
+Public users can:
+- Browse approved assets
+- View asset metadata and previews
+- Download approved assets via time-limited presigned URLs
 
-## Deployment through Render.com
+Public users cannot:
+- Upload assets
+- Modify or delete data
+- Access admin or contributor tools
 
-First, recall that Vite is a development dependency, so it will not be used in
-production. This means that you must already have the __dist__ folder located in
-the root of your __react-vite__ folder when you push to GitHub. This __dist__
-folder contains your React code and all necessary dependencies minified and
-bundled into a smaller footprint, ready to be served from your Python API.
+This allows evaluation of the project without account creation while maintaining security.
 
-Begin deployment by running `npm run build` in your __react-vite__ folder and
-pushing any changes to GitHub.
+---
 
-Refer to your Render.com deployment articles for more detailed instructions
-about getting started with [Render.com], creating a production database, and
-deployment debugging tips.
+## Authentication & Roles
+Authenticated access uses role-based permissions:
 
-From the Render [Dashboard], click on the "New +" button in the navigation bar,
-and click on "Web Service" to create the application that will be deployed.
+### Admin
+- Approve or reject submitted assets
+- Control asset visibility
+- Maintain database quality and organization
 
-Select that you want to "Build and deploy from a Git repository" and click
-"Next". On the next page, find the name of the application repo you want to
-deploy and click the "Connect" button to the right of the name.
+### Modeler (Contributor)
+- Upload assets
+- Submissions are created with a `pending` status until approved
 
-Now you need to fill out the form to configure your app. Most of the setup will
-be handled by the __Dockerfile__, but you do need to fill in a few fields.
+Assets only become visible in the public demo after admin approval.
 
-Start by giving your application a name.
+---
 
-Make sure the Region is set to the location closest to you, the Branch is set to
-"main", and Runtime is set to "Docker". You can leave the Root Directory field
-blank. (By default, Render will run commands from the root directory.)
+## Asset Moderation & Verification
+To prevent database clutter and ensure quality:
+- All uploads begin in a `pending` state
+- Admin approval is required for public visibility
+- Verification includes:
+  - Allowed file types
+  - File size limits
+  - Required metadata fields
+  - Duplicate detection (planned)
 
-Select "Free" as your Instance Type.
+---
 
-### Add environment variables
+## Secure Downloads (AWS S3)
+Approved assets are stored in a **private AWS S3 bucket**.
 
-In the development environment, you have been securing your environment
-variables in a __.env__ file, which has been removed from source control (i.e.,
-the file is gitignored). In this step, you will need to input the keys and
-values for the environment variables you need for production into the Render
-GUI.
+Downloads are handled using:
+- Presigned URLs
+- Short expiration windows (typically 2–5 minutes)
 
-Add the following keys and values in the Render GUI form:
+This allows public access without exposing the storage bucket or credentials.
 
-- SECRET_KEY (click "Generate" to generate a secure secret for production)
-- FLASK_ENV production
-- FLASK_APP app
-- SCHEMA (your unique schema name, in snake_case)
+---
 
-In a new tab, navigate to your dashboard and click on your Postgres database
-instance.
+## Unreal Engine Integration
 
-Add the following keys and values:
+AssetHub includes Unreal Engine editor-side tooling that connects Unreal workflows to the backend system.
 
-- DATABASE_URL (copy value from the **External Database URL** field)
+### Features
+- Editor-based export actions
+- Metadata submission to backend
+- Designed for Unreal Engine **5.7.1**
 
-**Note:** Add any other keys and values that may be present in your local
-__.env__ file. As you work to further develop your project, you may need to add
-more environment variables to your local __.env__ file. Make sure you add these
-environment variables to the Render GUI as well for the next deployment.
+### Installer Script
+The project provides a downloadable Unreal Python installer script with:
+- Step-by-step installation instructions
+- Automatic editor menu or utility setup
+- Test connection / validation steps
 
-### Deploy
+This allows Unreal users to integrate AssetHub tooling without manual configuration.
 
-Now you are finally ready to deploy! Click "Create Web Service" to deploy your
-project. The deployment process will likely take about 10-15 minutes if
-everything works as expected. You can monitor the logs to see your Dockerfile
-commands being executed and any errors that occur.
+---
 
-When deployment is complete, open your deployed site and check to see that you
-have successfully deployed your Flask application to Render! You can find the
-URL for your site just below the name of the Web Service at the top of the page.
+## Roadmap (v2)
+- Finalize database schema
+- Complete full CRUD functionality
+- AWS S3 asset storage integration
+- Presigned public download endpoints
+- Admin approval dashboard
+- Dockerize backend and deploy to Render
+- Expand Unreal export automation and metadata capture
+- UI/UX polish (loading states, errors, confirmations)
 
-**Note:** By default, Render will set Auto-Deploy for your project to true. This
-setting will cause Render to re-deploy your application every time you push to
-main, always keeping it up to date.
+---
 
-[Render.com]: https://render.com/
-[Dashboard]: https://dashboard.render.com/
+## Notes for Reviewers
+This project emphasizes:
+- Clean architecture over feature sprawl
+- Secure public access patterns
+- Realistic asset pipeline workflows
+- Iterative development from MVP to production-ready tooling
