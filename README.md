@@ -1,10 +1,15 @@
-# AssetHub – Unreal Asset Management Tool
+# CSAssetHub – Unreal Asset Management Tool
 
 ## Overview
-AssetHub is a full-stack asset management platform designed for game and CG production pipelines.  
-It combines a React frontend, a Flask backend, a relational database, and Unreal Engine editor-side tooling to support asset exports, metadata tracking, and secure distribution of approved assets.
+CSAssetHub is a full-stack asset management platform designed for game and CG production pipelines, with a focus on supporting remote workflows for teams working in **Unreal Engine**.
 
-The project focuses on realistic tooling workflows rather than simple CRUD demos.
+The project combines a React frontend, a Flask backend, a relational database, and Unreal Engine editor-side tooling to support asset exports, metadata tracking, and secure distribution of approved assets.
+
+CSAssetHub integrates skills developed through **App Academy** with my background in **3D modeling, VFX, and technical art**, emphasizing real-world production tooling rather than demo-only CRUD applications.
+
+**The goal of CSAssetHub is to demonstrate how modern full-stack web development can integrate directly with real-time engine workflows used in professional game and CG production.**
+
+> **Engine Version:** Unreal Engine 5.7.1
 
 ---
 
@@ -23,13 +28,13 @@ The project focuses on realistic tooling workflows rather than simple CRUD demos
 - SQLite (SQL)
 
 ### Cloud & Infrastructure
-- AWS S3 (private bucket with presigned download URLs)
+- AWS S3 (private bucket with presigned download URLs – v2)
 - Docker (planned)
 - Render (planned deployment)
 
 ### Engine Integration
 - Unreal Engine **5.7.1**
-- Blueprint-based editor tooling
+- Editor-side tooling (Blueprints)
 - Optional Unreal Python scripting
 
 ---
@@ -42,24 +47,24 @@ The project focuses on realistic tooling workflows rather than simple CRUD demos
 Primary focus:
 - Full CRUD completion
 - Secure asset storage and public demo access
-- Deployment and Unreal pipeline refinement
+- Deployment and Unreal Engine pipeline refinement
 
 ---
 
 ## Public Demo Mode (No Login Required)
-AssetHub includes a **public, read-only demo mode** intended for recruiters and interviewers.
+CSAssetHub includes a **public, read-only demo mode** intended for recruiters and interviewers.
 
 Public users can:
 - Browse approved assets
 - View asset metadata and previews
-- Download approved assets via time-limited presigned URLs
+- Download approved assets using **time-limited presigned URLs**
 
 Public users cannot:
 - Upload assets
 - Modify or delete data
 - Access admin or contributor tools
 
-This allows evaluation of the project without account creation while maintaining security.
+This allows the project to be evaluated without account creation while maintaining security.
 
 ---
 
@@ -67,12 +72,12 @@ This allows evaluation of the project without account creation while maintaining
 Authenticated access uses role-based permissions:
 
 ### Admin
-- Approve or reject submitted assets
-- Control asset visibility
-- Maintain database quality and organization
+- Approves or rejects submitted assets
+- Controls asset visibility
+- Maintains database quality and organization
 
 ### Modeler (Contributor)
-- Upload assets
+- Uploads assets
 - Submissions are created with a `pending` status until approved
 
 Assets only become visible in the public demo after admin approval.
@@ -103,28 +108,37 @@ This allows public access without exposing the storage bucket or credentials.
 ---
 
 ## Unreal Engine Integration
-
-AssetHub includes Unreal Engine editor-side tooling that connects Unreal workflows to the backend system.
+CSAssetHub includes Unreal Engine editor-side tooling that connects Unreal workflows to the backend system.
 
 ### Features
 - Editor-based export actions
-- Metadata submission to backend
+- Metadata submission to the backend
 - Designed for Unreal Engine **5.7.1**
 
 ### Installer Script
 The project provides a downloadable Unreal Python installer script with:
 - Step-by-step installation instructions
 - Automatic editor menu or utility setup
-- Test connection / validation steps
+- Test connection and validation steps
 
-This allows Unreal users to integrate AssetHub tooling without manual configuration.
+This allows Unreal users to integrate CSAssetHub tooling without manual configuration.
+
+---
+
+## Project Structure
+The project follows the App Academy capstone convention and is intentionally kept simple for clarity and deployment.
+
+- `app/` – Flask backend API
+- `react-vite/` – React frontend (Vite)
+- `migrations/` – Database migrations
+- `instance/` – Local configuration and database files
 
 ---
 
 ## Roadmap (v2)
 - Finalize database schema
 - Complete full CRUD functionality
-- AWS S3 asset storage integration
+- AWS S3 private asset storage
 - Presigned public download endpoints
 - Admin approval dashboard
 - Dockerize backend and deploy to Render
@@ -136,6 +150,4 @@ This allows Unreal users to integrate AssetHub tooling without manual configurat
 ## Notes for Reviewers
 This project emphasizes:
 - Clean architecture over feature sprawl
-- Secure public access patterns
-- Realistic asset pipeline workflows
-- Iterative development from MVP to production-ready tooling
+- Secure public
