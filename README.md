@@ -1,13 +1,13 @@
-# CSAssetHub – Unreal Asset Management Tool
+# AssetsHub – Unreal Asset Management Tool
 
 ## Overview
-CSAssetHub is a full-stack asset management platform designed for game and CG production pipelines, with a focus on supporting remote workflows for teams working in **Unreal Engine**.
+AssetsHub is a full-stack asset management platform designed for game and CG production pipelines, with a focus on supporting remote workflows for teams working in **Unreal Engine**.
 
 The project combines a React frontend, a Flask backend, a relational database, and Unreal Engine editor-side tooling to support asset exports, metadata tracking, and secure distribution of approved assets.
 
-CSAssetHub integrates skills developed through **App Academy** with my background in **3D modeling, VFX, and technical art**, emphasizing real-world production tooling rather than demo-only CRUD applications.
+AssetsHub integrates skills developed through **App Academy** with my background in **3D modeling, VFX, and technical art**, emphasizing real-world production tooling rather than demo-only CRUD applications.
 
-**The goal of CSAssetHub is to demonstrate how modern full-stack web development can integrate directly with real-time engine workflows used in professional game and CG production.**
+**The goal of AssetsHub is to demonstrate how modern full-stack web development can integrate directly with real-time engine workflows used in professional game and CG production.**
 
 > **Engine Version:** Unreal Engine 5.7.1
 
@@ -52,7 +52,7 @@ Primary focus:
 ---
 
 ## Public Demo Mode (No Login Required)
-CSAssetHub includes a **public, read-only demo mode** intended for recruiters and interviewers.
+AssetsHub includes a **public, read-only demo mode** intended for recruiters and interviewers.
 
 Public users can:
 - Browse approved assets
@@ -108,7 +108,7 @@ This allows public access without exposing the storage bucket or credentials.
 ---
 
 ## Unreal Engine Integration
-CSAssetHub includes Unreal Engine editor-side tooling that connects Unreal workflows to the backend system.
+AssetsHub includes Unreal Engine editor-side tooling that connects Unreal workflows to the backend system.
 
 ### Features
 - Editor-based export actions
@@ -121,7 +121,7 @@ The project provides a downloadable Unreal Python installer script with:
 - Automatic editor menu or utility setup
 - Test connection and validation steps
 
-This allows Unreal users to integrate CSAssetHub tooling without manual configuration.
+This allows Unreal users to integrate AssetsHub tooling without manual configuration.
 
 ---
 
@@ -150,4 +150,6 @@ The project follows the App Academy capstone convention and is intentionally kep
 ## Notes for Reviewers
 This project emphasizes:
 - Clean architecture over feature sprawl
-- Secure public
+- Secure public access patterns
+- Realistic asset pipeline workflows
+- Iterative development from MVP to production-ready tooling
