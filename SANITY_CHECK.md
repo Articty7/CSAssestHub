@@ -29,3 +29,16 @@
 - [x] Protected routes return unauthorized when logged out:
   - GET /api/auth/ → 401
   - GET /api/users/ → redirects to unauthorized → 401
+
+# Sanity Check – Jan 2026 (Mac)
+
+## Backend
+- [x] Flask starts: http://127.0.0.1:8000
+- [x] GET /api/assets returns JSON (200)
+- [x] Auth-protected endpoints reject unauthenticated requests (401)
+
+## Frontend
+- [x] Vite starts: http://localhost:5173
+- [x] Vite proxy routes /api/* to backend
+- [x] Public demo route loads: /assets
+- [x] Management route loads: /dashboard
