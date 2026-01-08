@@ -24,7 +24,7 @@ import {
  * - Backend expects tag NAMES when creating assets (change to IDs if you later want).
  * - CSRF header is injected by api.js interceptor for mutating requests.
  */
-export default function Assets() {
+export default function Dashboard() {
   // ---------- Data state ----------
   const [assets, setAssets] = useState([]);
   const [tags, setTags] = useState([]);
@@ -208,7 +208,7 @@ export default function Assets() {
         fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
       }}
     >
-      <h1 style={{ marginBottom: 6 }}>Asset Hub</h1>
+      <h1 style={{ marginBottom: 6 }}>AssetsHub Dashboard</h1>
       <p style={{ marginTop: 0, color: "#666" }}>
         Create tags, upload assets (optional file), and manage your library.
       </p>
